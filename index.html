@@ -124,11 +124,17 @@
 
             <!-- Generate Actions -->
             <div class="pt-4 border-t border-[#3d1b6b] space-y-3">
-                <button id="btnDownloadImage" class="w-full bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition flex items-center justify-center gap-2">
+                <button id="btnDownloadHighRes" class="w-full bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition flex items-center justify-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
-                    Download as Image
+                    Download High-Res (PNG)
+                </button>
+                <button id="btnDownloadWeb" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download Web-Optimized (JPG)
                 </button>
                 <button id="btnDownloadPDF" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition flex items-center justify-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -195,7 +201,8 @@
         const canvas = document.getElementById('previewCanvas');
         const ctx = canvas.getContext('2d');
         
-        const btnDownloadImage = document.getElementById('btnDownloadImage');
+        const btnDownloadHighRes = document.getElementById('btnDownloadHighRes');
+        const btnDownloadWeb = document.getElementById('btnDownloadWeb');
         const btnDownloadPDF = document.getElementById('btnDownloadPDF');
 
         // Modal Elements
@@ -266,7 +273,8 @@
             });
         });
 
-        btnDownloadImage.addEventListener('click', () => downloadSingle('image'));
+        btnDownloadHighRes.addEventListener('click', () => downloadSingle('png'));
+        btnDownloadWeb.addEventListener('click', () => downloadSingle('jpg_web'));
         btnDownloadPDF.addEventListener('click', () => downloadSingle('pdf'));
 
         // --- Core Functions ---
@@ -324,13 +332,25 @@
             drawPreview();
             
             const safeName = name.replace(/[^a-z0-9]/gi, '_').trim() || `invitation`;
-            const dataUrl = canvas.toDataURL('image/jpeg', 1.0); // Highest quality JPEG
+            
+            let dataUrl;
+            let fileExtension;
+            
+            if (type === 'png') {
+                dataUrl = canvas.toDataURL('image/png'); // Highest quality PNG
+                fileExtension = 'png';
+            } else if (type === 'jpg_web') {
+                dataUrl = canvas.toDataURL('image/jpeg', 0.6); // Web optimized (smaller file size)
+                fileExtension = 'jpg';
+            } else {
+                dataUrl = canvas.toDataURL('image/jpeg', 1.0); // Highest quality JPEG for PDF base
+            }
 
             try {
-                if (type === 'image') {
+                if (type === 'png' || type === 'jpg_web') {
                     // Create temporary link to download image
                     const link = document.createElement('a');
-                    link.download = `${safeName}.jpg`;
+                    link.download = `${safeName}.${fileExtension}`;
                     link.href = dataUrl;
                     link.click();
                 } else if (type === 'pdf') {
